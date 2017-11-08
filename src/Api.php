@@ -56,13 +56,13 @@ class Api {
     /**
      * Initialize
      */
-    public function __constructor($site, $key) {
+    public function __construct($site, $key) {
         if ($site && $key) {
             // Set API Credentials
             $this->site = $site;
             $this->key = $key;
         } else 
-            throw new Exception('You must pass both your SITE & Key into the Constructor.');
+            throw new \Exception('You must pass both your SITE & Key into the Constructor.');
     }
 
     public function check() {
@@ -81,7 +81,7 @@ class Api {
 
         if ($this->apiParams) {
             try {
-                $client = new \GuzzleHttp\Client();
+                $client = new Client();
             
                 $response = $client->request('POST', $this->apiBaseUrl, [
                     'form_params' => $this->apiParams
@@ -97,7 +97,7 @@ class Api {
             }
         }
         
-        return new Exception('You must set atleast 1 parameter.');
+        return new \Exception('You must set atleast 1 parameter.');
     }
 
     /**
