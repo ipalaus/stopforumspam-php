@@ -242,7 +242,7 @@ class Api {
     /**
      * Get API Params
      */
-    public function getApiParams() {
+    protected function getApiParams() {
         if (!is_null($this->apiParams))
             return $this->apiParams;
 
@@ -282,8 +282,8 @@ class Api {
     /**
      * Set Confidence Level
      */
-    public function setConfidenceLevel($confidence) {
-        $this->confidence = $confidence;
+    public function setMaxConfidence($confidence) {
+        $this->maxConfidence = $confidence;
     }
 
     /**
