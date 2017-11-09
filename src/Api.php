@@ -11,7 +11,12 @@ class Api {
     /**
      * @var string
      */
-    protected $apiBaseUrl = 'http://api.stopforumspam.org/api?json';
+    protected $apiBaseUrl = 'https://api.stopforumspam.org/api?json';
+
+    /**
+     * @var string
+     */
+    protected $apiAddUrl = 'https://www.stopforumspam.com/add';
 
     /**
      * @var string
@@ -66,21 +71,49 @@ class Api {
     /**
      * @var string
      */
-    protected $emailHash;
+    protected $evidence;
 
     /**
-     * Initialize the class with a constructor.
-     * The API Key must be passed to the constructor!
+     * Initialization Constructor
      */
     public function __construct($apiKey) {
         if ($apiKey) {
-
             /*
              * Set Api Key
              */
             $this->apiKey = $apiKey;
         } else
-            throw new \Exception('You must pass both your SITE & Key into the Constructor.');
+            throw new \Exception('You must pass your API Key into the Constructor.');
+    }
+
+    /**
+     * Report a Spammer
+     * IP, Username, and Email are required!
+     * @return \Exception|string
+     */
+    public function reportSpammer() {
+        /*
+         * Setup Params
+         */
+        $this->setApiParams(true);
+
+        if ($this->getApiParams()) {
+            try {
+                $client = new Client();
+                $response = $client->request('POST', $this->apiAddUrl, ['form_params' => $this->apiParams]);
+                $parsedResponse = $response->getBody();
+
+                if ($parsedResponse)
+                    return $parsedResponse;
+
+            } catch (ClientException $e) {
+                if ($e->hasResponse())
+                    return Psr7\str($e->getResponse());
+
+                return Psr7\str($e->getRequest());
+            }
+        }
+        return new \Exception('You must set atleast 1 parameter before running reportSpammer()');
     }
 
     /**
@@ -146,23 +179,13 @@ class Api {
      * @return \Exception|array|string
      */
     public function setResultData($return = false) {
-        if (isset($this->ip))
-            $this->apiParams['ip'] = $this->ip;
+        /*
+         * Setup Params
+         */
+        $this->setApiParams();
 
-        if (isset($this->email))
-            $this->apiParams['email'] = $this->email;
-
-        if (isset($this->username))
-            $this->apiParams['username'] = $this->username;
-
-        if ($this->apiParams) {
+        if ($this->getApiParams()) {
             try {
-
-                /*
-                 * Add Api Key to apiParams
-                 */
-                $this->apiParams['api_key'] = $this->apiKey;
-
                 $client = new Client();
                 $response = $client->request('POST', $this->apiBaseUrl, ['form_params' => $this->apiParams]);
                 $parsedResponse = \GuzzleHttp\json_decode($response->getBody(), true);
@@ -182,10 +205,48 @@ class Api {
                     return Psr7\str($e->getResponse());
 
                 return Psr7\str($e->getRequest());
-
             }
         }
-        return new \Exception('You must set atleast 1 parameter.');
+        return new \Exception('You must set atleast 1 parameter before running reportData()');
+    }
+
+    /**
+     * Set API Params
+     */
+    protected function setApiParams($noEvidence = false) {
+        if (isset($this->ip))
+            $this->apiParams['ip'] = $this->ip;
+
+        if (isset($this->email))
+            $this->apiParams['email'] = $this->email;
+
+        if (isset($this->username))
+            $this->apiParams['username'] = $this->username;
+
+        if (isset($this->evidence) && $noEvidence)
+            $this->apiParams['evidence'] = $this->evidence;
+
+        if (is_null($this->apiParams))
+            return new \Exception('You must set atleast 1 parameter before running setApiParams().');
+
+        if ($noEvidence && !isset($this->apiParams['email']) && !isset($this->apiParams['username']) && !isset($this->apiParams['ip']))
+            return new \Exception('When reporting, you must set: Email, Username, and the IP Address.');
+
+        /*
+         * Set Api Key
+         */
+        $this->apiParams['api_key'] = $this->apiKey;
+        return $this->apiParams;
+    }
+
+    /**
+     * Get API Params
+     */
+    public function getApiParams() {
+        if (!is_null($this->apiParams))
+            return $this->apiParams;
+
+        return new \Exception('You must run setApiParams() first!');
     }
 
     /**
@@ -244,5 +305,12 @@ class Api {
      */
     public function setUsername($username) {
         $this->username = $username;
+    }
+
+    /**
+     * Set Evidence
+     */
+    public function setEvidence($evidence) {
+        $this->evidence = $evidence;
     }
 }
