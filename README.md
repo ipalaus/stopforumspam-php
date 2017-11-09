@@ -81,6 +81,14 @@ This setter allows you to set the maximum confidence level allowed when testing 
 ```php
 $apiClient->setMaxConfidence(23.4);
 ```
+#### setMaxFrequency($frequency)
+This setter allows you to set the maximum frequency allowed when testing for frequency when confidence isn't found with the functions `setIsConfidence();` and `setConfidenceData();`.
+
+**The Max Frequency defaults to 25 when not set**
+1. Set the Max Frequency
+```php
+$apiClient->setMaxFrequency(25);
+```
 #### setExplanation($explanation)
 This setter allows you to set an explanation to send when reporting data.
 1. Set an Explanation.
