@@ -9,7 +9,7 @@
             "email": "info@robertgallione.com"
         }
     ],
-    "minimum-stability": "",
+    "minimum-stability": "1.0",
     "prefer-stable": true,
     "type": "library",
     "require": {
