@@ -21,53 +21,132 @@ class Api {
     /**
      * @var string
      */
+    protected $apiKey;
+
+    /**
+     * @var array
+     */
     protected $apiParams = [];
+
+    /**
+     * @var float
+     */
+    protected $maxConfidence = 25.0;
+
+    /**
+     * @var array
+     */
+    protected $resultData = null;
+
+    /**
+     * @var array
+     */
+    protected $confidenceData = null;
+
+    /**
+     * @var boolean
+     */
+    protected $isConfidence = null;
 
     /**
      * @var string
      */
-    protected $site;
-    
-    /**
-     * @var string 
-     */
-    protected $key;
-
-    /**
-     * @var
-     */
     protected $ip;
 
     /**
-     * @var
+     * @var string
      */
     protected $email;
 
     /**
-     * @var
+     * @var string
      */
     protected $username;
 
     /**
-     * @var
+     * @var string
      */
     protected $emailHash;
 
     /**
-     * Initialize
+     * Initialize the class with a constructor.
+     * The API Key must be passed to the constructor!
      */
-    public function __construct($site, $key) {
-        if ($site && $key) {
-            // Set API Credentials
-            $this->site = $site;
-            $this->key = $key;
-        } else 
+    public function __construct($apiKey) {
+        if ($apiKey) {
+
+            /*
+             * Set Api Key
+             */
+            $this->apiKey = $apiKey;
+        } else
             throw new \Exception('You must pass both your SITE & Key into the Constructor.');
     }
 
-    public function check() {
+    /**
+     * Check if the specified type value has a confidence level less than the set maximum confidence (NON-BULK)
+     * @return \Exception|boolean
+     */
+    public function setIsConfidence($type = 'ip', $confidence = null, $return = true) {
+        if (!is_null($confidence))
+            $this->maxConfidence = $confidence;
 
-        if (isset($this->ip)) 
+        if (is_null($this->resultData))
+            return new \Exception('You must run setResultData() first!');
+
+        if (isset($this->resultData[$type])) {
+            if (isset($this->resultData[$type]['confidence'])) {
+                if ($this->resultData[$type]['confidence'] < $this->maxConfidence)
+                    $this->isConfidence = true;
+                else
+                    $this->isConfidence = false;
+
+                if ($return)
+                    return $this->isConfidence;
+
+                return true;
+            } else
+                return new \Exception('The "confidence" key was not found in the Type: '. $type);
+        } else
+            return new \Exception('Type was not found in the Result Data!');
+    }
+
+    /**
+     * Check if the specified type values have a confidence level less than the set maximum confidence (BULK)
+     * @return \Exception|array|boolean
+     */
+    public function setConfidenceData($type = 'ip', $confidence = null, $return = true) {
+        if (!is_null($confidence))
+            $this->maxConfidence = $confidence;
+
+        if (is_null($this->resultData))
+            return new \Exception('You must run setResultData() first!');
+
+        if (isset($this->resultData[$type])) {
+            if (!isset($this->resultData[$type]['confidence'])) {
+                foreach($this->resultData[$type] as $row) {
+                    if ($row['confidence'] < $this->maxConfidence)
+                        $this->confidenceData[$type][$row['value']] = true;
+                    else
+                        $this->confidenceData[$type][$row['value']] = false;
+                }
+
+                if ($return)
+                    return $this->confidenceData;
+
+                return true;
+            } else
+                return new \Exception('The "confidence" key was found in the Type: '. $type);
+        } else
+            return new \Exception('Type was not found in the Result Data!');
+    }
+
+    /**
+     * Return Raw Result if successful (BULK & NON-BULK)
+     * @return \Exception|array|string
+     */
+    public function setResultData($return = false) {
+        if (isset($this->ip))
             $this->apiParams['ip'] = $this->ip;
 
         if (isset($this->email))
@@ -75,56 +154,95 @@ class Api {
 
         if (isset($this->username))
             $this->apiParams['username'] = $this->username;
-    
-        if (isset($this->emailHash))
-            $this->apiParams['emailhash'] = $this->emailHash;
 
         if ($this->apiParams) {
             try {
+
+                /*
+                 * Add Api Key to apiParams
+                 */
+                $this->apiParams['api_key'] = $this->apiKey;
+
                 $client = new Client();
-            
-                $response = $client->request('POST', $this->apiBaseUrl, [
-                    'form_params' => $this->apiParams
-                ]);
+                $response = $client->request('POST', $this->apiBaseUrl, ['form_params' => $this->apiParams]);
+                $parsedResponse = \GuzzleHttp\json_decode($response->getBody(), true);
 
-                return $response;
+                if ($parsedResponse['success']) {
+                    $this->resultData = $parsedResponse;
 
+                    if ($return)
+                        return $this->resultData;
+
+                    return true;
+                }
+
+                return new \Exception("Error: ". $parsedResponse['error']);
             } catch (ClientException $e) {
                 if ($e->hasResponse())
                     return Psr7\str($e->getResponse());
-                
+
                 return Psr7\str($e->getRequest());
+
             }
         }
-        
         return new \Exception('You must set atleast 1 parameter.');
     }
 
     /**
-     * Set IP Address
+     * Get Result Data (BULK & NON-BULK)
+     */
+    public function getResultData() {
+        if (!is_null($this->resultData))
+            return $this->resultData;
+
+        return new \Exception('You must run setResultData() first.');
+    }
+
+    /**
+     * Get Confidence Data (BULK)
+     */
+    public function getConfidenceData() {
+        if (!is_null($this->confidenceData))
+            return $this->confidenceData;
+
+        return new \Exception('You must run setConfidenceData() first.');
+    }
+
+    /**
+     * Get isConfident (NON-BULK)
+     */
+    public function getIsConfidence() {
+        if (!is_null($this->isConfidence))
+            return $this->isConfidence;
+
+        return new \Exception('You must run setIsConfidence() first.');
+    }
+
+    /**
+     * Set Confidence Level
+     */
+    public function setConfidenceLevel($confidence) {
+        $this->confidence = $confidence;
+    }
+
+    /**
+     * Set IP Address (BULK & NON-BULK)
      */
     public function setIp($ip = null) {
         $this->ip = is_null($ip) ? $_SERVER['REMOTE_ADDR'] : $ip;
     }
 
     /**
-     * Set Email Address
+     * Set Email Address (BULK & NON-BULK)
      */
     public function setEmail($email) {
         $this->email = $email;
     }
 
     /**
-     * Set Username
+     * Set Username (BULK & NON-BULK)
      */
     public function setUsername($username) {
         $this->username = $username;
-    }
-
-    /**
-     * Set Email Hash
-     */
-    public function setEmailHash($email) {
-        $this->emailHash = md5($email);
     }
 }
