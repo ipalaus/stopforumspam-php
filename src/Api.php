@@ -39,6 +39,11 @@ class Api {
     protected $maxConfidence = 25.0;
 
     /**
+     * @var int
+     */
+    protected $maxFrequency = 25;
+    
+    /**
      * @var array
      */
     protected $resultData = null;
@@ -138,8 +143,20 @@ class Api {
                     return $this->isConfidence;
 
                 return true;
-            } else
-                return new \Exception('The "confidence" key was not found in the Type: '. $type);
+            } else if (isset($this->resultData[$type]['frequency'])) {
+                if ($this->resultData[$type]['frequency'] < $this->maxFrequency)
+                    $this->isConfidence = true;
+                else
+                    $this->isConfidence = false;
+                
+                if ($return)
+                    return $this->isConfidence;
+            } else {
+                $this->isConfidence = true; // Not spammer based on no data
+                
+                if ($return)
+                    return $this->isConfidence;
+            }
         } else
             return new \Exception('Type was not found in the Result Data!');
     }
@@ -156,20 +173,25 @@ class Api {
             return new \Exception('You must run setResultData() first!');
 
         if (isset($this->resultData[$type])) {
-            if (!isset($this->resultData[$type]['confidence'])) {
-                foreach($this->resultData[$type] as $row) {
+            foreach($this->resultData[$type] as $row) {
+                if (isset($row['confidence'])) {
                     if ($row['confidence'] < $this->maxConfidence)
                         $this->confidenceData[$type][$row['value']] = true;
                     else
                         $this->confidenceData[$type][$row['value']] = false;
-                }
+                } else if (isset($row['frequency'])) {
+                    if ($row['frequency'] < $this->maxFrequency)
+                        $this->confidenceData[$type][$row['value']] = true;
+                    else
+                        $this->confidenceData[$type][$row['value']] = false;
+                } else
+                       $this->confidenceData[$type][$row['value']] = true; // Cant find any data that says this row is spam.
+            }
 
-                if ($return)
-                    return $this->confidenceData;
+            if ($return)
+                return $this->confidenceData;
 
-                return true;
-            } else
-                return new \Exception('The "confidence" key was found in the Type: '. $type);
+            return true;
         } else
             return new \Exception('Type was not found in the Result Data!');
     }
@@ -284,6 +306,13 @@ class Api {
      */
     public function setMaxConfidence($confidence) {
         $this->maxConfidence = $confidence;
+    }
+                           
+    /**
+     * Set Max Frequency
+     */
+    public function setMaxFrequency($frequency) {
+        $this->maxFrequency = $frequency;
     }
 
     /**
