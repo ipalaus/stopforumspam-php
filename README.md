@@ -12,7 +12,7 @@ Stop Forum Spam is a free service that records reports of spam on forums, blogs 
 ## Installation
 You must have [Composer](https://getcomposer.org/download/) installed to use this API Client.
 ```
-composer require robertgallione/stopforumspam-php
+composer require robertgallione/stopforumspam-php:master
 ```
 If you aren't using a framework such as [Laravel](https://laravel.com/), you will need to include the `autoload.php` file.
 ```php
