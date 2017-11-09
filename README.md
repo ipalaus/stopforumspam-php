@@ -1,6 +1,9 @@
 # StopForumSpam.com Unofficial PHP API Client
 I built this API Client in a couple of hours to use with software I am building. It has all the functionality you should need, but I am sure the functionality could be extended. I welcome anyone to submit a [PR](https://github.com/robertgallione/stopforumspam-php/pulls) if you find any bugs/additional functionality you would like added. This has been bug tested heavily, however if you find any bugs, please open up a [issue](https://github.com/robertgallione/stopforumspam-php/issues) and I will review and resolve it when I get time.
 
+##### About StopForumSpam.com
+Stop Forum Spam is a free service that records reports of spam on forums, blogs and wikis to name a few. All these records are then made available to you search and view but most importantly, to access in an automated way to block suspected spammers before they can get in the front door. Everyone is familiar with more traditional "solve the word" systems to prevent abuse, Stop Forum Spam is a targeted and specialsed solution to help stop abuse of your website.
+
 ## Requirements
 * PHP 5.5 or above
 * [Composer](https://getcomposer.org/download/)
@@ -21,7 +24,7 @@ require 'vendor/autoload.php';
 
 ### Initialization
 ```php
-$apiClient = new StopForumSpam\Api('YOUR_API_KEY_GOES_HERE');
+$apiClient = new StopForumSpam\Api('YOUR_API_KEY_GOES_HERE'); // Get your API Key at: http://www.stopforumspam.com/signup
 ```
 
 
