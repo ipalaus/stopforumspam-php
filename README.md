@@ -1,4 +1,4 @@
-# StopForumSpam.com Unofficial PHP API Client
+# StopForumSpam.com PHP API Client
 I built this API Client in a couple of hours to use with software I am building. It has all the functionality you should need, but I am sure the functionality could be extended. I welcome anyone to submit a [PR](https://github.com/robertgallione/stopforumspam-php/pulls) if you find any bugs/additional functionality you would like added. This has been bug tested heavily, however if you find any bugs, please open up a [issue](https://github.com/robertgallione/stopforumspam-php/issues) and I will review and resolve it when I get time.
 
 ##### About StopForumSpam.com
